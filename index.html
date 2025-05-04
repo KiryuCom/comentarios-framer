@@ -454,6 +454,7 @@
         // Función para limitar nombres a 10 caracteres
         function limitarNombre(nombre) {
             if (nombre.length > 10) {
+                alert('El nombre no puede exceder 10 caracteres.');
                 return nombre.substring(0, 10);
             }
             return nombre;
@@ -465,7 +466,7 @@
             const comentariosQuery = query(comentariosRef, orderByChild('userId'), equalTo(userId));
             return new Promise((resolve) => {
                 onValue(comentariosQuery, (snapshot) => {
-                    resolve(snapshot.numChildren());
+                    resolve(snapshot.size || 0); // Usar snapshot.size en lugar de numChildren
                 }, { onlyOnce: true });
             });
         }
@@ -578,8 +579,11 @@
             let nombre = nombreInput.value || 'Anónimo';
             const texto = commentInput.value;
 
-            // Limitar nombre a 10 caracteres
+            // Validar y limitar nombre a 10 caracteres
             nombre = limitarNombre(nombre);
+            if (nombre !== nombreInput.value) {
+                nombreInput.value = nombre; // Actualizar el input con el nombre recortado
+            }
 
             if (texto.trim()) {
                 const comentarioCount = await contarComentariosPorUserId(currentUserId);
@@ -609,8 +613,11 @@
             let nombre = nombreInput.value || 'Anónimo';
             const texto = textoInput.value;
 
-            // Limitar nombre a 10 caracteres
+            // Validar y limitar nombre a 10 caracteres
             nombre = limitarNombre(nombre);
+            if (nombre !== nombreInput.value) {
+                nombreInput.value = nombre; // Actualizar el input con el nombre recortado
+            }
 
             if (texto.trim()) {
                 const nuevaRespuesta = {
