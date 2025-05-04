@@ -50,8 +50,9 @@
             padding: 0;
             background-color: #f4f4f9;
             color: #333;
-            height: 100vh; /* Evita que la página crezca más allá de la altura de la pantalla */
-            overflow-y: auto; /* Scroll global si es necesario */
+            min-height: 100vh; /* Asegura que el body tenga al menos la altura de la pantalla */
+            display: flex;
+            flex-direction: column;
         }
         header {
             background-color: #4a90e2;
@@ -73,6 +74,7 @@
             margin: 1rem auto;
             padding: 0 0.5rem;
             flex: 1;
+            box-sizing: border-box; /* Asegura que el padding no aumente el ancho total */
         }
         .comments-section {
             background-color: white;
@@ -139,8 +141,8 @@
             padding: 0.1rem 0.3rem;
             font-size: 0.8rem;
             color: #666;
-            -webkit-tap-highlight-color: transparent; /* Elimina el efecto azul en móviles */
-            user-select: none; /* Evita selección al tocar */
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
         }
         .comment-actions button:hover {
             color: #333;
@@ -198,7 +200,7 @@
         .replies {
             margin-left: 2.5rem;
             margin-top: 0.3rem;
-            max-height: 150px; /* Límite ajustado para móviles */
+            max-height: 150px;
             overflow-y: auto;
             font-size: 0.85rem;
         }
@@ -243,14 +245,17 @@
             display: flex;
             gap: 0.5rem;
             margin-bottom: 1rem;
-            flex-direction: column; /* Stack en móviles por defecto */
+            flex-direction: column;
+            width: 100%; /* Asegura que no se desborde */
+            box-sizing: border-box;
         }
         input, button {
             padding: 0.6rem;
             font-size: 0.9rem;
             border: 1px solid #ddd;
             border-radius: 5px;
-            width: 100%; /* Full width en móviles */
+            width: 100%;
+            box-sizing: border-box; /* Asegura que el padding no aumente el ancho */
         }
         button {
             background-color: #4a90e2;
@@ -271,6 +276,7 @@
             color: white;
             width: 100%;
             font-size: 0.7rem;
+            margin-top: auto; /* Empuja el footer al final del contenido */
         }
         @media (min-width: 391px) {
             header {
