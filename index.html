@@ -50,7 +50,7 @@
             padding: 0;
             background-color: #f4f4f9;
             color: #333;
-            min-height: 100vh; /* Asegura que el body tenga al menos la altura de la pantalla */
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
@@ -71,17 +71,49 @@
         }
         .container {
             max-width: 390px;
-            margin: 1rem auto;
+            margin: 0.5rem auto;
             padding: 0 0.5rem;
             flex: 1;
-            box-sizing: border-box; /* Asegura que el padding no aumente el ancho total */
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            flex-direction: column;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        input, button {
+            padding: 0.6rem;
+            font-size: 0.9rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        button:hover {
+            background-color: #357abd;
         }
         .comments-section {
             background-color: white;
             border-radius: 10px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             padding: 1rem;
-            margin-bottom: 1rem;
+            flex: 1; /* Ocupa el espacio disponible */
+            overflow-y: auto; /* Permite scroll dentro del contenedor */
+            margin-bottom: 0.5rem;
         }
         .comment {
             display: flex;
@@ -203,6 +235,10 @@
             max-height: 150px;
             overflow-y: auto;
             font-size: 0.85rem;
+            display: none; /* Ocultas por defecto */
+        }
+        .replies.active {
+            display: block;
         }
         .reply {
             display: flex;
@@ -241,34 +277,6 @@
         .view-replies.active {
             display: block;
         }
-        .form-group {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-            flex-direction: column;
-            width: 100%; /* Asegura que no se desborde */
-            box-sizing: border-box;
-        }
-        input, button {
-            padding: 0.6rem;
-            font-size: 0.9rem;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            width: 100%;
-            box-sizing: border-box; /* Asegura que el padding no aumente el ancho */
-        }
-        button {
-            background-color: #4a90e2;
-            color: white;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
-        }
-        button:hover {
-            background-color: #357abd;
-        }
         footer {
             text-align: center;
             padding: 0.5rem;
@@ -276,7 +284,7 @@
             color: white;
             width: 100%;
             font-size: 0.7rem;
-            margin-top: auto; /* Empuja el footer al final del contenido */
+            margin-top: auto;
         }
         @media (min-width: 391px) {
             header {
@@ -292,6 +300,15 @@
                 max-width: 800px;
                 margin: 2rem auto;
                 padding: 0 1rem;
+            }
+            .form-group {
+                flex-direction: row;
+                gap: 1rem;
+            }
+            input, button {
+                padding: 0.75rem;
+                font-size: 1rem;
+                width: auto;
             }
             .comments-section {
                 padding: 1.5rem;
@@ -353,15 +370,6 @@
                 margin-top: 0.5rem;
                 font-size: 0.9rem;
             }
-            .form-group {
-                flex-direction: row;
-                gap: 1rem;
-            }
-            input, button {
-                padding: 0.75rem;
-                font-size: 1rem;
-                width: auto;
-            }
             footer {
                 padding: 1rem;
                 font-size: 0.8rem;
@@ -376,14 +384,14 @@
     </header>
 
     <div class="container">
-        <div class="comments-section">
-            <h2>Comentarios</h2>
-            <div id="comments-list"></div>
-        </div>
         <div class="form-group">
             <input type="text" id="nombreInput" placeholder="Tu nombre (opcional)">
             <input type="text" id="commentInput" placeholder="Escribe tu comentario...">
             <button onclick="agregarComentario()">Enviar</button>
+        </div>
+        <div class="comments-section">
+            <h2>Comentarios</h2>
+            <div id="comments-list"></div>
         </div>
     </div>
 
@@ -488,14 +496,13 @@
                         if (comentario.replies) {
                             const repliesDiv = document.getElementById(`replies-${id}`);
                             const replyCount = Object.keys(comentario.replies).length;
-                            if (replyCount > 2) {
-                                repliesDiv.style.display = 'none';
+                            if (replyCount > 0) { // Mostrar botón si hay al menos una respuesta
                                 const viewReplies = document.createElement('div');
                                 viewReplies.className = 'view-replies active';
                                 viewReplies.textContent = `Ver ${replyCount} respuestas`;
                                 viewReplies.onclick = () => {
-                                    repliesDiv.style.display = repliesDiv.style.display === 'none' ? 'block' : 'none';
-                                    viewReplies.textContent = repliesDiv.style.display === 'none' ? `Ver ${replyCount} respuestas` : 'Ocultar respuestas';
+                                    const isVisible = repliesDiv.classList.toggle('active');
+                                    viewReplies.textContent = isVisible ? 'Ocultar respuestas' : `Ver ${replyCount} respuestas`;
                                 };
                                 div.appendChild(viewReplies);
                             }
