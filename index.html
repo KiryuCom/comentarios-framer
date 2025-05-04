@@ -109,8 +109,8 @@
             width: 100%;
         }
         #commentInput {
-            flex: 1; /* Ocupa el espacio disponible */
-            min-width: 0; /* Evita que el input crezca más allá del contenedor */
+            flex: 1;
+            min-width: 0;
         }
         button {
             padding: 0.5rem;
@@ -124,7 +124,7 @@
             -webkit-tap-highlight-color: transparent;
             user-select: none;
             box-sizing: border-box;
-            width: 80px; /* Tamaño fijo para el botón */
+            width: 80px;
         }
         button:hover {
             background-color: #357abd;
@@ -186,7 +186,6 @@
             gap: 0.5rem;
             margin-top: 0.3rem;
             align-items: center;
-            flex-wrap: wrap;
         }
         .comment-actions button {
             background: none;
@@ -203,6 +202,16 @@
         }
         .comment-actions button:hover {
             color: #333;
+        }
+        .comment-actions .vote-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .reply-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.3rem;
+            width: 100%;
         }
         .menu-options {
             position: absolute;
@@ -290,8 +299,6 @@
             gap: 0.3rem;
         }
         .view-replies {
-            margin-left: 2.5rem;
-            margin-top: 0.3rem;
             color: #4a90e2;
             cursor: pointer;
             font-size: 0.8rem;
@@ -307,9 +314,11 @@
             padding: 0.5rem;
             background-color: #4a90e2;
             color: white;
+            max-width: 390px; /* Alineado con header */
+            margin: 0 auto; /* Centrado */
+            box-sizing: border-box;
             width: 100%;
             font-size: 0.7rem;
-            margin-top: auto;
         }
         @media (min-width: 391px) {
             header {
@@ -397,8 +406,6 @@
                 margin-top: 0.5rem;
             }
             .view-replies {
-                margin-left: 3rem;
-                margin-top: 0.5rem;
                 font-size: 0.9rem;
             }
             footer {
@@ -495,13 +502,18 @@
                                 <p class="nombre">${comentario.nombre || 'Anónimo'}</p>
                                 <p class="texto">${comentario.texto}</p>
                                 <div class="comment-actions">
-                                    <button onclick="darLike('${id}', '${userId}')">
-                                        👍 ${comentario.likes || 0}
-                                    </button>
-                                    <button onclick="darDislike('${id}', '${userId}')">
-                                        👎 ${comentario.dislikes || 0}
-                                    </button>
+                                    <div class="vote-buttons">
+                                        <button onclick="giveLike('${id}', '${userId}')">
+                                            👍 ${comentario.likes || 0}
+                                        </button>
+                                        <button onclick="giveDislike('${id}', '${userId}')">
+                                            👎 ${comentario.dislikes || 0}
+                                        </button>
+                                    </div>
                                     <button onclick="mostrarResponder('${id}')">Responder</button>
+                                </div>
+                                <div class="reply-actions">
+                                    <div class="view-replies" id="view-replies-${id}"></div>
                                 </div>
                                 <div class="replies" id="replies-${id}"></div>
                                 <div class="reply-form" id="reply-form-${id}">
@@ -528,16 +540,15 @@
 
                         if (comentario.replies) {
                             const repliesDiv = document.getElementById(`replies-${id}`);
+                            const viewReplies = document.getElementById(`view-replies-${id}`);
                             const replyCount = Object.keys(comentario.replies).length;
                             if (replyCount > 0) {
-                                const viewReplies = document.createElement('div');
                                 viewReplies.className = 'view-replies active';
                                 viewReplies.textContent = `Ver ${replyCount} respuestas`;
                                 viewReplies.onclick = () => {
                                     const isVisible = repliesDiv.classList.toggle('active');
                                     viewReplies.textContent = isVisible ? 'Ocultar respuestas' : `Ver ${replyCount} respuestas`;
                                 };
-                                div.appendChild(viewReplies);
                             }
                             Object.entries(comentario.replies).forEach(([replyId, reply]) => {
                                 const replyColor = generarColorAleatorio(reply.nombre || reply.timestamp);
