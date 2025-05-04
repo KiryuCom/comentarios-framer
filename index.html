@@ -79,6 +79,7 @@
             align-items: flex-start;
             padding: 1rem 0;
             border-bottom: 1px solid #eee;
+            position: relative;
         }
         .comment:last-child {
             border-bottom: none;
@@ -89,7 +90,7 @@
             border-radius: 50%;
             margin-right: 1rem;
             align-self: flex-start;
-            background-color: #ccc; /* Color base por defecto */
+            background-color: #ccc;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -132,6 +133,51 @@
         .comment-actions button:hover {
             color: #333;
         }
+        .menu-options {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        .menu-options button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #666;
+        }
+        .menu-options .dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+            z-index: 1;
+        }
+        .menu-options .dropdown.active {
+            display: block;
+        }
+        .menu-options .dropdown button {
+            display: block;
+            width: 100%;
+            padding: 0.5rem 1rem;
+            text-align: left;
+            border: none;
+            background: none;
+            cursor: pointer;
+            color: #333;
+        }
+        .menu-options .dropdown button:hover {
+            background-color: #f0f0f0;
+        }
+        .edit-form {
+            display: none;
+            margin-top: 0.5rem;
+        }
+        .edit-form.active {
+            display: flex;
+            gap: 0.5rem;
+        }
         .replies {
             margin-left: 3rem;
             margin-top: 0.5rem;
@@ -161,12 +207,15 @@
             display: flex;
             gap: 1rem;
             margin-bottom: 1rem;
+            flex-wrap: wrap;
         }
         input, button {
             padding: 0.75rem;
             font-size: 1rem;
             border: 1px solid #ddd;
             border-radius: 5px;
+            flex: 1;
+            min-width: 200px;
         }
         button {
             background-color: #4a90e2;
@@ -174,6 +223,7 @@
             border: none;
             cursor: pointer;
             transition: background-color 0.3s;
+            flex: 0 0 auto;
         }
         button:hover {
             background-color: #357abd;
@@ -186,6 +236,31 @@
             position: fixed;
             bottom: 0;
             width: 100%;
+        }
+        @media (max-width: 600px) {
+            header h1 {
+                font-size: 1.8rem;
+            }
+            header p {
+                font-size: 0.9rem;
+            }
+            .container {
+                padding: 0 0.5rem;
+            }
+            input {
+                min-width: 100%;
+            }
+            button {
+                width: 100%;
+                padding: 0.75rem;
+            }
+            .form-group {
+                flex-direction: column;
+            }
+            .comment-actions {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
         }
     </style>
 </head>
@@ -215,7 +290,7 @@
     <script type="module">
         // Importar los módulos necesarios de Firebase
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
-        import { getDatabase, ref, onValue, push, update } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js';
+        import { getDatabase, ref, onValue, push, update, remove } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js';
 
         // Configuración de Firebase (credenciales de tu proyecto IreSoph)
         const firebaseConfig = {
@@ -232,6 +307,13 @@
         // Inicializar Firebase
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
+
+        // Generar o recuperar el userId del usuario actual
+        let currentUserId = localStorage.getItem('currentUserId');
+        if (!currentUserId) {
+            currentUserId = 'user_' + Date.now();
+            localStorage.setItem('currentUserId', currentUserId);
+        }
 
         // Generar color aleatorio basado en un string (nombre o timestamp)
         function generarColorAleatorio(str) {
@@ -255,18 +337,22 @@
                 if (comentarios) {
                     Object.entries(comentarios).forEach(([id, comentario]) => {
                         const color = generarColorAleatorio(comentario.nombre || comentario.timestamp);
+                        const userId = comentario.userId || 'anonymous_' + id;
+                        const isAuthor = userId === currentUserId; // Verificar si el usuario es el autor
                         const div = document.createElement('div');
                         div.className = 'comment';
+                        div.setAttribute('data-id', id);
+                        div.setAttribute('data-user-id', userId);
                         div.innerHTML = `
                             <div class="profile-pic" style="background-color: ${color};">${(comentario.nombre || 'Anónimo')[0]}</div>
                             <div class="comment-content">
                                 <p class="nombre">${comentario.nombre || 'Anónimo'}</p>
                                 <p class="texto">${comentario.texto}</p>
                                 <div class="comment-actions">
-                                    <button onclick="darLike('${id}')">
+                                    <button onclick="darLike('${id}', '${userId}')">
                                         👍 ${comentario.likes || 0}
                                     </button>
-                                    <button onclick="darDislike('${id}')">
+                                    <button onclick="darDislike('${id}', '${userId}')">
                                         👎 ${comentario.dislikes || 0}
                                     </button>
                                     <button onclick="mostrarResponder('${id}')">Responder</button>
@@ -276,6 +362,19 @@
                                     <input type="text" id="reply-nombre-${id}" placeholder="Tu nombre (opcional)">
                                     <input type="text" id="reply-texto-${id}" placeholder="Escribe tu respuesta...">
                                     <button onclick="agregarRespuesta('${id}')">Enviar</button>
+                                </div>
+                                <div class="edit-form" id="edit-form-${id}">
+                                    <input type="text" id="edit-texto-${id}" value="${comentario.texto}">
+                                    <button onclick="guardarEdicion('${id}')">Guardar</button>
+                                    <button onclick="cancelarEdicion('${id}')">Cancelar</button>
+                                    </div>
+                            </div>
+                            <div class="menu-options">
+                                <button onclick="mostrarMenu('${id}')">⋮</button>
+                                <div class="dropdown" id="dropdown-${id}">
+                                    ${isAuthor ? `<button onclick="eliminarComentario('${id}', '${userId}')">Eliminar</button>` : ''}
+                                    <button onclick="compartirComentario('${id}')">Compartir</button>
+                                    <button onclick="editarComentario('${id}', '${userId}')">Editar</button>
                                 </div>
                             </div>
                         `;
@@ -313,7 +412,8 @@
                     texto: texto,
                     timestamp: new Date().toISOString(),
                     likes: 0,
-                    dislikes: 0
+                    dislikes: 0,
+                    userId: currentUserId
                 };
                 // Guardar en Firebase
                 push(ref(database, 'comentarios'), nuevoComentario);
@@ -324,24 +424,56 @@
         }
 
         // Dar like a un comentario
-        function darLike(id) {
+        function darLike(id, userId) {
+            const voteKey = `vote_${id}_${userId}`;
+            const currentVote = localStorage.getItem(voteKey);
             const comentarioRef = ref(database, `comentarios/${id}`);
+
             onValue(comentarioRef, (snapshot) => {
                 const comentario = snapshot.val();
-                update(comentarioRef, {
-                    likes: (comentario.likes || 0) + 1
-                });
+                let updates = {};
+
+                if (currentVote === 'like') {
+                    // Si ya dio like, quitarlo
+                    updates.likes = (comentario.likes || 0) - 1;
+                    localStorage.removeItem(voteKey);
+                } else {
+                    // Si no ha votado o dio dislike, agregar like
+                    updates.likes = (comentario.likes || 0) + 1;
+                    if (currentVote === 'dislike') {
+                        updates.dislikes = (comentario.dislikes || 0) - 1;
+                    }
+                    localStorage.setItem(voteKey, 'like');
+                }
+
+                update(comentarioRef, updates);
             }, { onlyOnce: true });
         }
 
         // Dar dislike a un comentario
-        function darDislike(id) {
+        function darDislike(id, userId) {
+            const voteKey = `vote_${id}_${userId}`;
+            const currentVote = localStorage.getItem(voteKey);
             const comentarioRef = ref(database, `comentarios/${id}`);
+
             onValue(comentarioRef, (snapshot) => {
                 const comentario = snapshot.val();
-                update(comentarioRef, {
-                    dislikes: (comentario.dislikes || 0) + 1
-                });
+                let updates = {};
+
+                if (currentVote === 'dislike') {
+                    // Si ya dio dislike, quitarlo
+                    updates.dislikes = (comentario.dislikes || 0) - 1;
+                    localStorage.removeItem(voteKey);
+                } else {
+                    // Si no ha votado o dio like, agregar dislike
+                    updates.dislikes = (comentario.dislikes || 0) + 1;
+                    if (currentVote === 'like') {
+                        updates.likes = (comentario.likes || 0) - 1;
+                    }
+                    localStorage.setItem(voteKey, 'dislike');
+                }
+
+                update(comentarioRef, updates);
             }, { onlyOnce: true });
         }
 
@@ -370,6 +502,57 @@
             }
         }
 
+        // Mostrar el menú de opciones
+        function mostrarMenu(id) {
+            const dropdown = document.getElementById(`dropdown-${id}`);
+            dropdown.classList.toggle('active');
+        }
+
+        // Eliminar un comentario
+        function eliminarComentario(id, userId) {
+            if (userId !== currentUserId) {
+                alert('No tienes permiso para eliminar este comentario.');
+                return;
+            }
+            const comentarioRef = ref(database, `comentarios/${id}`);
+            remove(comentarioRef);
+        }
+
+        // Compartir un comentario
+        function compartirComentario(id) {
+            const url = `${window.location.href}#comment-${id}`;
+            navigator.clipboard.writeText(url).then(() => {
+                alert('Enlace al comentario copiado al portapapeles: ' + url);
+            });
+        }
+
+        // Editar un comentario
+        function editarComentario(id, userId) {
+            if (userId !== currentUserId) {
+                alert('No tienes permiso para editar este comentario.');
+                return;
+            }
+            const editForm = document.getElementById(`edit-form-${id}`);
+            editForm.classList.add('active');
+            const dropdown = document.getElementById(`dropdown-${id}`);
+            dropdown.classList.remove('active');
+        }
+
+        // Guardar la edición del comentario
+        function guardarEdicion(id) {
+            const texto = document.getElementById(`edit-texto-${id}`).value;
+            if (texto.trim()) {
+                const comentarioRef = ref(database, `comentarios/${id}`);
+                update(comentarioRef, { texto: texto });
+                document.getElementById(`edit-form-${id}`).classList.remove('active');
+            }
+        }
+
+        // Cancelar la edición
+        function cancelarEdicion(id) {
+            document.getElementById(`edit-form-${id}`).classList.remove('active');
+        }
+
         // Cargar comentarios al iniciar la página
         window.onload = cargarComentarios;
 
@@ -379,6 +562,12 @@
         window.darDislike = darDislike;
         window.mostrarResponder = mostrarResponder;
         window.agregarRespuesta = agregarRespuesta;
+        window.mostrarMenu = mostrarMenu;
+        window.eliminarComentario = eliminarComentario;
+        window.compartirComentario = compartirComentario;
+        window.editarComentario = editarComentario;
+        window.guardarEdicion = guardarEdicion;
+        window.cancelarEdicion = cancelarEdicion;
     </script>
 </body>
 </html>
