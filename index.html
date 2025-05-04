@@ -181,12 +181,15 @@
         .replies {
             margin-left: 3rem;
             margin-top: 0.5rem;
+            max-height: 200px; /* Límite inicial de altura */
+            overflow-y: auto; /* Scroll si hay muchas respuestas */
         }
         .reply {
             display: flex;
             align-items: flex-start;
             padding: 0.5rem 0;
             border-top: 1px solid #f0f0f0;
+            position: relative;
         }
         .reply .profile-pic {
             width: 30px;
@@ -202,6 +205,17 @@
         }
         .reply-form.active {
             display: flex;
+        }
+        .view-replies {
+            margin-left: 3rem;
+            margin-top: 0.5rem;
+            color: #4a90e2;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: none;
+        }
+        .view-replies.active {
+            display: block;
         }
         .form-group {
             display: flex;
@@ -338,7 +352,7 @@
                     Object.entries(comentarios).forEach(([id, comentario]) => {
                         const color = generarColorAleatorio(comentario.nombre || comentario.timestamp);
                         const userId = comentario.userId || 'anonymous_' + id;
-                        const isAuthor = userId === currentUserId; // Verificar si el usuario es el autor
+                        const isAuthor = userId === currentUserId;
                         const div = document.createElement('div');
                         div.className = 'comment';
                         div.setAttribute('data-id', id);
@@ -367,14 +381,14 @@
                                     <input type="text" id="edit-texto-${id}" value="${comentario.texto}">
                                     <button onclick="guardarEdicion('${id}')">Guardar</button>
                                     <button onclick="cancelarEdicion('${id}')">Cancelar</button>
-                                    </div>
+                                </div>
                             </div>
                             <div class="menu-options">
                                 <button onclick="mostrarMenu('${id}')">⋮</button>
                                 <div class="dropdown" id="dropdown-${id}">
                                     ${isAuthor ? `<button onclick="eliminarComentario('${id}', '${userId}')">Eliminar</button>` : ''}
                                     <button onclick="compartirComentario('${id}')">Compartir</button>
-                                    <button onclick="editarComentario('${id}', '${userId}')">Editar</button>
+                                    ${isAuthor ? `<button onclick="editarComentario('${id}', '${userId}')">Editar</button>` : ''}
                                 </div>
                             </div>
                         `;
@@ -383,15 +397,39 @@
                         // Cargar respuestas si existen
                         if (comentario.replies) {
                             const repliesDiv = document.getElementById(`replies-${id}`);
-                            Object.values(comentario.replies).forEach(reply => {
+                            const replyCount = Object.keys(comentario.replies).length;
+                            if (replyCount > 2) {
+                                repliesDiv.style.display = 'none';
+                                const viewReplies = document.createElement('div');
+                                viewReplies.className = 'view-replies active';
+                                viewReplies.textContent = `Ver ${replyCount} respuestas`;
+                                viewReplies.onclick = () => {
+                                    repliesDiv.style.display = repliesDiv.style.display === 'none' ? 'block' : 'none';
+                                    viewReplies.textContent = repliesDiv.style.display === 'none' ? `Ver ${replyCount} respuestas` : 'Ocultar respuestas';
+                                };
+                                div.appendChild(viewReplies);
+                            }
+                            Object.entries(comentario.replies).forEach(([replyId, reply]) => {
                                 const replyColor = generarColorAleatorio(reply.nombre || reply.timestamp);
+                                const replyUserId = reply.userId || 'anonymous_' + replyId;
+                                const isReplyAuthor = replyUserId === currentUserId;
                                 const replyDiv = document.createElement('div');
                                 replyDiv.className = 'reply';
+                                replyDiv.setAttribute('data-id', replyId);
+                                replyDiv.setAttribute('data-user-id', replyUserId);
                                 replyDiv.innerHTML = `
                                     <div class="profile-pic" style="background-color: ${replyColor};">${(reply.nombre || 'Anónimo')[0]}</div>
                                     <div class="comment-content">
                                         <p class="nombre">${reply.nombre || 'Anónimo'}</p>
                                         <p class="texto">${reply.texto}</p>
+                                    </div>
+                                    <div class="menu-options">
+                                        <button onclick="mostrarMenuReply('${id}', '${replyId}')">⋮</button>
+                                        <div class="dropdown" id="dropdown-${id}-${replyId}">
+                                            ${isReplyAuthor ? `<button onclick="eliminarRespuesta('${id}', '${replyId}', '${replyUserId}')">Eliminar</button>` : ''}
+                                            <button onclick="compartirRespuesta('${id}', '${replyId}')">Compartir</button>
+                                            ${isReplyAuthor ? `<button onclick="editarRespuesta('${id}', '${replyId}', '${replyUserId}')">Editar</button>` : ''}
+                                        </div>
                                     </div>
                                 `;
                                 repliesDiv.appendChild(replyDiv);
@@ -415,9 +453,7 @@
                     dislikes: 0,
                     userId: currentUserId
                 };
-                // Guardar en Firebase
                 push(ref(database, 'comentarios'), nuevoComentario);
-                // Limpiar el formulario
                 document.getElementById('nombreInput').value = '';
                 document.getElementById('commentInput').value = '';
             }
@@ -434,11 +470,9 @@
                 let updates = {};
 
                 if (currentVote === 'like') {
-                    // Si ya dio like, quitarlo
                     updates.likes = (comentario.likes || 0) - 1;
                     localStorage.removeItem(voteKey);
                 } else {
-                    // Si no ha votado o dio dislike, agregar like
                     updates.likes = (comentario.likes || 0) + 1;
                     if (currentVote === 'dislike') {
                         updates.dislikes = (comentario.dislikes || 0) - 1;
@@ -461,11 +495,9 @@
                 let updates = {};
 
                 if (currentVote === 'dislike') {
-                    // Si ya dio dislike, quitarlo
                     updates.dislikes = (comentario.dislikes || 0) - 1;
                     localStorage.removeItem(voteKey);
                 } else {
-                    // Si no ha votado o dio like, agregar dislike
                     updates.dislikes = (comentario.dislikes || 0) + 1;
                     if (currentVote === 'like') {
                         updates.likes = (comentario.likes || 0) - 1;
@@ -491,11 +523,10 @@
                 const nuevaRespuesta = {
                     nombre: nombre,
                     texto: texto,
-                    timestamp: new Date().toISOString()
+                    timestamp: new Date().toISOString(),
+                    userId: currentUserId
                 };
-                // Guardar la respuesta en Firebase
                 push(ref(database, `comentarios/${id}/replies`), nuevaRespuesta);
-                // Limpiar el formulario de respuesta
                 document.getElementById(`reply-nombre-${id}`).value = '';
                 document.getElementById(`reply-texto-${id}`).value = '';
                 document.getElementById(`reply-form-${id}`).classList.remove('active');
@@ -505,6 +536,12 @@
         // Mostrar el menú de opciones
         function mostrarMenu(id) {
             const dropdown = document.getElementById(`dropdown-${id}`);
+            dropdown.classList.toggle('active');
+        }
+
+        // Mostrar el menú de opciones de una respuesta
+        function mostrarMenuReply(commentId, replyId) {
+            const dropdown = document.getElementById(`dropdown-${commentId}-${replyId}`);
             dropdown.classList.toggle('active');
         }
 
@@ -518,11 +555,29 @@
             remove(comentarioRef);
         }
 
+        // Eliminar una respuesta
+        function eliminarRespuesta(commentId, replyId, userId) {
+            if (userId !== currentUserId) {
+                alert('No tienes permiso para eliminar esta respuesta.');
+                return;
+            }
+            const replyRef = ref(database, `comentarios/${commentId}/replies/${replyId}`);
+            remove(replyRef);
+        }
+
         // Compartir un comentario
         function compartirComentario(id) {
             const url = `${window.location.href}#comment-${id}`;
             navigator.clipboard.writeText(url).then(() => {
                 alert('Enlace al comentario copiado al portapapeles: ' + url);
+            });
+        }
+
+        // Compartir una respuesta
+        function compartirRespuesta(commentId, replyId) {
+            const url = `${window.location.href}#comment-${commentId}-reply-${replyId}`;
+            navigator.clipboard.writeText(url).then(() => {
+                alert('Enlace a la respuesta copiado al portapapeles: ' + url);
             });
         }
 
@@ -536,6 +591,16 @@
             editForm.classList.add('active');
             const dropdown = document.getElementById(`dropdown-${id}`);
             dropdown.classList.remove('active');
+        }
+
+        // Editar una respuesta
+        function editarRespuesta(commentId, replyId, userId) {
+            if (userId !== currentUserId) {
+                alert('No tienes permiso para editar esta respuesta.');
+                return;
+            }
+            // Aquí deberíamos agregar un formulario de edición para respuestas, pero por simplicidad lo dejaremos como tarea futura
+            alert('Edición de respuestas no implementada aún.');
         }
 
         // Guardar la edición del comentario
@@ -563,9 +628,13 @@
         window.mostrarResponder = mostrarResponder;
         window.agregarRespuesta = agregarRespuesta;
         window.mostrarMenu = mostrarMenu;
+        window.mostrarMenuReply = mostrarMenuReply;
         window.eliminarComentario = eliminarComentario;
+        window.eliminarRespuesta = eliminarRespuesta;
         window.compartirComentario = compartirComentario;
+        window.compartirRespuesta = compartirRespuesta;
         window.editarComentario = editarComentario;
+        window.editarRespuesta = editarRespuesta;
         window.guardarEdicion = guardarEdicion;
         window.cancelarEdicion = cancelarEdicion;
     </script>
