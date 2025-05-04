@@ -50,34 +50,41 @@
             padding: 0;
             background-color: #f4f4f9;
             color: #333;
+            height: 100vh; /* Evita que la página crezca más allá de la altura de la pantalla */
+            overflow-y: auto; /* Scroll global si es necesario */
         }
         header {
             background-color: #4a90e2;
             color: white;
             text-align: center;
-            padding: 2rem;
+            padding: 1rem;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
         header h1 {
             margin: 0;
-            font-size: 2.5rem;
+            font-size: 1.5rem;
+        }
+        header p {
+            margin: 0;
+            font-size: 0.8rem;
         }
         .container {
-            max-width: 800px;
-            margin: 2rem auto;
-            padding: 0 1rem;
+            max-width: 390px;
+            margin: 1rem auto;
+            padding: 0 0.5rem;
+            flex: 1;
         }
         .comments-section {
             background-color: white;
             border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            padding: 1.5rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 1rem;
             margin-bottom: 1rem;
         }
         .comment {
             display: flex;
             align-items: flex-start;
-            padding: 1rem 0;
+            padding: 0.5rem 0;
             border-bottom: 1px solid #eee;
             position: relative;
         }
@@ -85,39 +92,42 @@
             border-bottom: none;
         }
         .comment .profile-pic {
-            width: 40px;
-            height: 40px;
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
-            margin-right: 1rem;
+            margin-right: 0.5rem;
             align-self: flex-start;
             background-color: #ccc;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 1.5rem;
+            font-size: 1.2rem;
         }
         .comment .comment-content {
             flex: 1;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            min-height: 40px;
+            min-height: 30px;
         }
         .comment .comment-content .nombre {
             font-weight: bold;
-            margin: 0 0 0.3rem 0;
+            margin: 0 0 0.2rem 0;
             color: #333;
+            font-size: 0.9rem;
         }
         .comment .comment-content .texto {
             margin: 0;
             color: #555;
+            font-size: 0.85rem;
         }
         .comment-actions {
             display: flex;
-            gap: 1rem;
-            margin-top: 0.5rem;
+            gap: 0.5rem;
+            margin-top: 0.3rem;
             align-items: center;
+            flex-wrap: wrap;
         }
         .comment-actions button {
             background: none;
@@ -125,18 +135,20 @@
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 0.3rem;
-            padding: 0.2rem 0.5rem;
-            font-size: 0.9rem;
+            gap: 0.2rem;
+            padding: 0.1rem 0.3rem;
+            font-size: 0.8rem;
             color: #666;
+            -webkit-tap-highlight-color: transparent; /* Elimina el efecto azul en móviles */
+            user-select: none; /* Evita selección al tocar */
         }
         .comment-actions button:hover {
             color: #333;
         }
         .menu-options {
             position: absolute;
-            top: 10px;
-            right: 10px;
+            top: 5px;
+            right: 5px;
         }
         .menu-options button {
             background: none;
@@ -144,6 +156,8 @@
             cursor: pointer;
             font-size: 1rem;
             color: #666;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
         }
         .menu-options .dropdown {
             display: none;
@@ -153,6 +167,7 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
             border-radius: 5px;
             z-index: 1;
+            font-size: 0.8rem;
         }
         .menu-options .dropdown.active {
             display: block;
@@ -160,58 +175,65 @@
         .menu-options .dropdown button {
             display: block;
             width: 100%;
-            padding: 0.5rem 1rem;
+            padding: 0.3rem 0.8rem;
             text-align: left;
             border: none;
             background: none;
             cursor: pointer;
             color: #333;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
         }
         .menu-options .dropdown button:hover {
             background-color: #f0f0f0;
         }
         .edit-form {
             display: none;
-            margin-top: 0.5rem;
+            margin-top: 0.3rem;
         }
         .edit-form.active {
             display: flex;
-            gap: 0.5rem;
+            gap: 0.3rem;
         }
         .replies {
-            margin-left: 3rem;
-            margin-top: 0.5rem;
-            max-height: 200px; /* Límite inicial de altura */
-            overflow-y: auto; /* Scroll si hay muchas respuestas */
+            margin-left: 2.5rem;
+            margin-top: 0.3rem;
+            max-height: 150px; /* Límite ajustado para móviles */
+            overflow-y: auto;
+            font-size: 0.85rem;
         }
         .reply {
             display: flex;
             align-items: flex-start;
-            padding: 0.5rem 0;
+            padding: 0.3rem 0;
             border-top: 1px solid #f0f0f0;
             position: relative;
         }
         .reply .profile-pic {
-            width: 30px;
-            height: 30px;
+            width: 25px;
+            height: 25px;
         }
         .reply .comment-content {
-            min-height: 30px;
+            min-height: 25px;
         }
         .reply-form {
-            margin-left: 3rem;
-            margin-top: 0.5rem;
+            margin-left: 2.5rem;
+            margin-top: 0.3rem;
             display: none;
         }
         .reply-form.active {
             display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
         }
         .view-replies {
-            margin-left: 3rem;
-            margin-top: 0.5rem;
+            margin-left: 2.5rem;
+            margin-top: 0.3rem;
             color: #4a90e2;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
             display: none;
         }
         .view-replies.active {
@@ -219,17 +241,16 @@
         }
         .form-group {
             display: flex;
-            gap: 1rem;
+            gap: 0.5rem;
             margin-bottom: 1rem;
-            flex-wrap: wrap;
+            flex-direction: column; /* Stack en móviles por defecto */
         }
         input, button {
-            padding: 0.75rem;
-            font-size: 1rem;
+            padding: 0.6rem;
+            font-size: 0.9rem;
             border: 1px solid #ddd;
             border-radius: 5px;
-            flex: 1;
-            min-width: 200px;
+            width: 100%; /* Full width en móviles */
         }
         button {
             background-color: #4a90e2;
@@ -237,43 +258,107 @@
             border: none;
             cursor: pointer;
             transition: background-color 0.3s;
-            flex: 0 0 auto;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
         }
         button:hover {
             background-color: #357abd;
         }
         footer {
             text-align: center;
-            padding: 1rem;
+            padding: 0.5rem;
             background-color: #4a90e2;
             color: white;
-            position: fixed;
-            bottom: 0;
             width: 100%;
+            font-size: 0.7rem;
         }
-        @media (max-width: 600px) {
+        @media (min-width: 391px) {
+            header {
+                padding: 2rem;
+            }
             header h1 {
-                font-size: 1.8rem;
+                font-size: 2.5rem;
             }
             header p {
                 font-size: 0.9rem;
             }
             .container {
-                padding: 0 0.5rem;
+                max-width: 800px;
+                margin: 2rem auto;
+                padding: 0 1rem;
             }
-            input {
-                min-width: 100%;
+            .comments-section {
+                padding: 1.5rem;
             }
-            button {
-                width: 100%;
-                padding: 0.75rem;
+            .comment {
+                padding: 1rem 0;
+            }
+            .comment .profile-pic {
+                width: 40px;
+                height: 40px;
+                font-size: 1.5rem;
+            }
+            .comment .comment-content {
+                min-height: 40px;
+            }
+            .comment .comment-content .nombre {
+                font-size: 0.9rem;
+            }
+            .comment .comment-content .texto {
+                font-size: 0.85rem;
+            }
+            .comment-actions button {
+                font-size: 0.9rem;
+                padding: 0.2rem 0.5rem;
+            }
+            .menu-options button {
+                font-size: 1rem;
+            }
+            .menu-options .dropdown {
+                font-size: 0.9rem;
+            }
+            .menu-options .dropdown button {
+                padding: 0.5rem 1rem;
+            }
+            .edit-form {
+                margin-top: 0.5rem;
+            }
+            .replies {
+                margin-left: 3rem;
+                margin-top: 0.5rem;
+                max-height: 200px;
+            }
+            .reply {
+                padding: 0.5rem 0;
+            }
+            .reply .profile-pic {
+                width: 30px;
+                height: 30px;
+            }
+            .reply .comment-content {
+                min-height: 30px;
+            }
+            .reply-form {
+                margin-left: 3rem;
+                margin-top: 0.5rem;
+            }
+            .view-replies {
+                margin-left: 3rem;
+                margin-top: 0.5rem;
+                font-size: 0.9rem;
             }
             .form-group {
-                flex-direction: column;
+                flex-direction: row;
+                gap: 1rem;
             }
-            .comment-actions {
-                flex-wrap: wrap;
-                gap: 0.5rem;
+            input, button {
+                padding: 0.75rem;
+                font-size: 1rem;
+                width: auto;
+            }
+            footer {
+                padding: 1rem;
+                font-size: 0.8rem;
             }
         }
     </style>
@@ -306,7 +391,7 @@
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
         import { getDatabase, ref, onValue, push, update, remove } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js';
 
-        // Configuración de Firebase (credenciales de tu proyecto IreSoph)
+        // Configuración de Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyBAg0MTpWqrdE--W7G9tm0cFE4YZyFtyk",
             authDomain: "iresoph-9bf6e.firebaseapp.com",
@@ -329,7 +414,7 @@
             localStorage.setItem('currentUserId', currentUserId);
         }
 
-        // Generar color aleatorio basado en un string (nombre o timestamp)
+        // Generar color aleatorio
         function generarColorAleatorio(str) {
             let hash = 0;
             for (let i = 0; i < str.length; i++) {
@@ -341,12 +426,12 @@
             return `rgb(${r}, ${g}, ${b})`;
         }
 
-        // Cargar comentarios desde Firebase
+        // Cargar comentarios
         function cargarComentarios() {
             const commentsList = document.getElementById('comments-list');
             const comentariosRef = ref(database, 'comentarios');
             onValue(comentariosRef, (snapshot) => {
-                commentsList.innerHTML = ''; // Limpiar la lista
+                commentsList.innerHTML = '';
                 const comentarios = snapshot.val();
                 if (comentarios) {
                     Object.entries(comentarios).forEach(([id, comentario]) => {
@@ -394,7 +479,6 @@
                         `;
                         commentsList.appendChild(div);
 
-                        // Cargar respuestas si existen
                         if (comentario.replies) {
                             const repliesDiv = document.getElementById(`replies-${id}`);
                             const replyCount = Object.keys(comentario.replies).length;
@@ -440,7 +524,7 @@
             });
         }
 
-        // Agregar un nuevo comentario a Firebase
+        // Agregar comentario
         function agregarComentario() {
             const nombre = document.getElementById('nombreInput').value || 'Anónimo';
             const texto = document.getElementById('commentInput').value;
@@ -459,7 +543,7 @@
             }
         }
 
-        // Dar like a un comentario
+        // Dar like
         function darLike(id, userId) {
             const voteKey = `vote_${id}_${userId}`;
             const currentVote = localStorage.getItem(voteKey);
@@ -484,7 +568,7 @@
             }, { onlyOnce: true });
         }
 
-        // Dar dislike a un comentario
+        // Dar dislike
         function darDislike(id, userId) {
             const voteKey = `vote_${id}_${userId}`;
             const currentVote = localStorage.getItem(voteKey);
@@ -509,13 +593,13 @@
             }, { onlyOnce: true });
         }
 
-        // Mostrar el formulario de respuesta
+        // Mostrar formulario de respuesta
         function mostrarResponder(id) {
             const replyForm = document.getElementById(`reply-form-${id}`);
             replyForm.classList.toggle('active');
         }
 
-        // Agregar una respuesta a un comentario
+        // Agregar respuesta
         function agregarRespuesta(id) {
             const nombre = document.getElementById(`reply-nombre-${id}`).value || 'Anónimo';
             const texto = document.getElementById(`reply-texto-${id}`).value;
@@ -533,19 +617,19 @@
             }
         }
 
-        // Mostrar el menú de opciones
+        // Mostrar menú
         function mostrarMenu(id) {
             const dropdown = document.getElementById(`dropdown-${id}`);
             dropdown.classList.toggle('active');
         }
 
-        // Mostrar el menú de opciones de una respuesta
+        // Mostrar menú de respuesta
         function mostrarMenuReply(commentId, replyId) {
             const dropdown = document.getElementById(`dropdown-${commentId}-${replyId}`);
             dropdown.classList.toggle('active');
         }
 
-        // Eliminar un comentario
+        // Eliminar comentario
         function eliminarComentario(id, userId) {
             if (userId !== currentUserId) {
                 alert('No tienes permiso para eliminar este comentario.');
@@ -555,7 +639,7 @@
             remove(comentarioRef);
         }
 
-        // Eliminar una respuesta
+        // Eliminar respuesta
         function eliminarRespuesta(commentId, replyId, userId) {
             if (userId !== currentUserId) {
                 alert('No tienes permiso para eliminar esta respuesta.');
@@ -565,7 +649,7 @@
             remove(replyRef);
         }
 
-        // Compartir un comentario
+        // Compartir comentario
         function compartirComentario(id) {
             const url = `${window.location.href}#comment-${id}`;
             navigator.clipboard.writeText(url).then(() => {
@@ -573,7 +657,7 @@
             });
         }
 
-        // Compartir una respuesta
+        // Compartir respuesta
         function compartirRespuesta(commentId, replyId) {
             const url = `${window.location.href}#comment-${commentId}-reply-${replyId}`;
             navigator.clipboard.writeText(url).then(() => {
@@ -581,7 +665,7 @@
             });
         }
 
-        // Editar un comentario
+        // Editar comentario
         function editarComentario(id, userId) {
             if (userId !== currentUserId) {
                 alert('No tienes permiso para editar este comentario.');
@@ -593,17 +677,16 @@
             dropdown.classList.remove('active');
         }
 
-        // Editar una respuesta
+        // Editar respuesta
         function editarRespuesta(commentId, replyId, userId) {
             if (userId !== currentUserId) {
                 alert('No tienes permiso para editar esta respuesta.');
                 return;
             }
-            // Aquí deberíamos agregar un formulario de edición para respuestas, pero por simplicidad lo dejaremos como tarea futura
             alert('Edición de respuestas no implementada aún.');
         }
 
-        // Guardar la edición del comentario
+        // Guardar edición
         function guardarEdicion(id) {
             const texto = document.getElementById(`edit-texto-${id}`).value;
             if (texto.trim()) {
@@ -613,15 +696,15 @@
             }
         }
 
-        // Cancelar la edición
+        // Cancelar edición
         function cancelarEdicion(id) {
             document.getElementById(`edit-form-${id}`).classList.remove('active');
         }
 
-        // Cargar comentarios al iniciar la página
+        // Cargar comentarios al iniciar
         window.onload = cargarComentarios;
 
-        // Hacer las funciones accesibles globalmente
+        // Hacer funciones accesibles globalmente
         window.agregarComentario = agregarComentario;
         window.darLike = darLike;
         window.darDislike = darDislike;
