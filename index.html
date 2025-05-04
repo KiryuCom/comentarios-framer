@@ -58,8 +58,11 @@
             background-color: #4a90e2;
             color: white;
             text-align: center;
-            padding: 1rem;
+            padding: 1rem 0.5rem;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            max-width: 390px;
+            margin: 0 auto;
+            box-sizing: border-box;
         }
         header h1 {
             margin: 0;
@@ -71,7 +74,7 @@
         }
         .container {
             max-width: 390px;
-            margin: 0.5rem auto;
+            margin: 0 auto;
             padding: 0 0.5rem;
             flex: 1;
             box-sizing: border-box;
@@ -84,15 +87,18 @@
             margin-bottom: 0.5rem;
             flex-direction: column;
             width: 100%;
+            max-width: 100%; /* Asegura que no se desborde del contenedor */
+            margin: 0;
             box-sizing: border-box;
         }
         input, button {
-            padding: 0.6rem;
+            padding: 0.5rem; /* Reducido para mejor ajuste */
             font-size: 0.9rem;
             border: 1px solid #ddd;
             border-radius: 5px;
             width: 100%;
-            box-sizing: border-box;
+            box-sizing: border-box; /* Asegura que el padding no aumente el ancho */
+            margin: 0; /* Elimina márgenes adicionales */
         }
         button {
             background-color: #4a90e2;
@@ -110,10 +116,12 @@
             background-color: white;
             border-radius: 10px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            padding: 1rem;
-            flex: 1; /* Ocupa el espacio disponible */
-            overflow-y: auto; /* Permite scroll dentro del contenedor */
-            margin-bottom: 0.5rem;
+            padding: 1rem 0.5rem;
+            flex: 1;
+            overflow-y: auto;
+            max-width: 390px;
+            margin: 0 auto 0.5rem;
+            box-sizing: border-box;
         }
         .comment {
             display: flex;
@@ -235,7 +243,7 @@
             max-height: 150px;
             overflow-y: auto;
             font-size: 0.85rem;
-            display: none; /* Ocultas por defecto */
+            display: none;
         }
         .replies.active {
             display: block;
@@ -288,7 +296,7 @@
         }
         @media (min-width: 391px) {
             header {
-                padding: 2rem;
+                padding: 2rem 1rem;
             }
             header h1 {
                 font-size: 2.5rem;
@@ -311,7 +319,7 @@
                 width: auto;
             }
             .comments-section {
-                padding: 1.5rem;
+                padding: 1.5rem 1rem;
             }
             .comment {
                 padding: 1rem 0;
@@ -496,7 +504,7 @@
                         if (comentario.replies) {
                             const repliesDiv = document.getElementById(`replies-${id}`);
                             const replyCount = Object.keys(comentario.replies).length;
-                            if (replyCount > 0) { // Mostrar botón si hay al menos una respuesta
+                            if (replyCount > 0) {
                                 const viewReplies = document.createElement('div');
                                 viewReplies.className = 'view-replies active';
                                 viewReplies.textContent = `Ver ${replyCount} respuestas`;
