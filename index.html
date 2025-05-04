@@ -1,0 +1,104 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cuadro de Comentarios</title>
+  <style>
+    .container {
+      width: 390px;
+      height: 1080px;
+      background-color: #f0f0f0;
+      border: 1px solid #000;
+      padding: 20px;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+      overflow-y: auto;
+    }
+    .name-input, .comment-input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      box-sizing: border-box;
+    }
+    .comment-input {
+      height: 60px;
+      resize: none;
+    }
+    .submit-btn {
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .submit-btn:hover {
+      background-color: #0056b3;
+    }
+    .comments-section {
+      margin-top: 20px;
+    }
+    .comment {
+      border-top: 1px solid #ccc;
+      padding: 10px 0;
+    }
+    .comment .author {
+      font-weight: bold;
+    }
+    .comment .text {
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Deja tu comentario</h2>
+    <form id="comment-form">
+      <input type="text" class="name-input" placeholder="Tu nombre (opcional)">
+      <textarea class="comment-input" placeholder="Escribe tu comentario aquí..."></textarea>
+      <button type="submit" class="submit-btn">Enviar</button>
+    </form>
+    <div class="comments-section" id="comments-list"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('comment-form');
+    const nameInput = document.querySelector('.name-input');
+    const commentInput = document.querySelector('.comment-input');
+    const commentsList = document.getElementById('comments-list');
+
+    function loadComments() {
+      const comments = JSON.parse(localStorage.getItem('comments')) || [];
+      commentsList.innerHTML = '';
+      comments.forEach(comment => {
+        const div = document.createElement('div');
+        div.classList.add('comment');
+        div.innerHTML = `
+          <div class="author">${comment.name}</div>
+          <div class="text">${comment.text}</div>
+        `;
+        commentsList.appendChild(div);
+      });
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const name = nameInput.value.trim() || 'Usuario anónimo';
+      const text = commentInput.value.trim();
+      if (!text) return;
+
+      const newComment = { name, text };
+      const comments = JSON.parse(localStorage.getItem('comments')) || [];
+      comments.push(newComment);
+      localStorage.setItem('comments', JSON.stringify(comments));
+
+      nameInput.value = '';
+      commentInput.value = '';
+      loadComments();
+    });
+
+    loadComments();
+  </script>
+</body>
+</html>
