@@ -83,31 +83,48 @@
         }
         .form-group {
             display: flex;
+            flex-direction: column;
             gap: 0.5rem;
             margin-bottom: 0.5rem;
-            flex-direction: column;
             width: 100%;
-            max-width: 100%; /* Asegura que no se desborde del contenedor */
+            max-width: 100%;
             margin: 0;
             box-sizing: border-box;
         }
-        input, button {
-            padding: 0.5rem; /* Reducido para mejor ajuste */
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        input {
+            padding: 0.5rem;
             font-size: 0.9rem;
             border: 1px solid #ddd;
             border-radius: 5px;
+            box-sizing: border-box;
+            margin: 0;
+        }
+        #nombreInput {
             width: 100%;
-            box-sizing: border-box; /* Asegura que el padding no aumente el ancho */
-            margin: 0; /* Elimina márgenes adicionales */
+        }
+        #commentInput {
+            flex: 1; /* Ocupa el espacio disponible */
+            min-width: 0; /* Evita que el input crezca más allá del contenedor */
         }
         button {
+            padding: 0.5rem;
+            font-size: 0.9rem;
+            border: none;
+            border-radius: 5px;
             background-color: #4a90e2;
             color: white;
-            border: none;
             cursor: pointer;
             transition: background-color 0.3s;
             -webkit-tap-highlight-color: transparent;
             user-select: none;
+            box-sizing: border-box;
+            width: 80px; /* Tamaño fijo para el botón */
         }
         button:hover {
             background-color: #357abd;
@@ -310,13 +327,19 @@
                 padding: 0 1rem;
             }
             .form-group {
-                flex-direction: row;
                 gap: 1rem;
             }
-            input, button {
+            .input-group {
+                gap: 1rem;
+            }
+            input {
                 padding: 0.75rem;
                 font-size: 1rem;
-                width: auto;
+            }
+            button {
+                padding: 0.75rem;
+                font-size: 1rem;
+                width: 100px;
             }
             .comments-section {
                 padding: 1.5rem 1rem;
@@ -394,8 +417,10 @@
     <div class="container">
         <div class="form-group">
             <input type="text" id="nombreInput" placeholder="Tu nombre (opcional)">
-            <input type="text" id="commentInput" placeholder="Escribe tu comentario...">
-            <button onclick="agregarComentario()">Enviar</button>
+            <div class="input-group">
+                <input type="text" id="commentInput" placeholder="Escribe tu comentario...">
+                <button onclick="agregarComentario()">Enviar</button>
+            </div>
         </div>
         <div class="comments-section">
             <h2>Comentarios</h2>
@@ -565,7 +590,7 @@
         }
 
         // Dar like
-        function darLike(id, userId) {
+        function giveLike(id, userId) {
             const voteKey = `vote_${id}_${userId}`;
             const currentVote = localStorage.getItem(voteKey);
             const comentarioRef = ref(database, `comentarios/${id}`);
@@ -590,7 +615,7 @@
         }
 
         // Dar dislike
-        function darDislike(id, userId) {
+        function giveDislike(id, userId) {
             const voteKey = `vote_${id}_${userId}`;
             const currentVote = localStorage.getItem(voteKey);
             const comentarioRef = ref(database, `comentarios/${id}`);
@@ -727,8 +752,8 @@
 
         // Hacer funciones accesibles globalmente
         window.agregarComentario = agregarComentario;
-        window.darLike = darLike;
-        window.darDislike = darDislike;
+        window.giveLike = giveLike;
+        window.giveDislike = giveDislike;
         window.mostrarResponder = mostrarResponder;
         window.agregarRespuesta = agregarRespuesta;
         window.mostrarMenu = mostrarMenu;
