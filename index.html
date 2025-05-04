@@ -414,7 +414,7 @@
     <script type="module">
         // Importar los módulos necesarios de Firebase
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
-        import { getDatabase, ref, onValue, push, update, remove } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js';
+        import { getDatabase, ref, onValue, push, update, remove, query, orderByChild, equalTo } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js';
 
         // Configuración de Firebase
         const firebaseConfig = {
@@ -449,6 +449,25 @@
             const g = (hash & 0x00ff00) >> 8;
             const b = hash & 0x0000ff;
             return `rgb(${r}, ${g}, ${b})`;
+        }
+
+        // Función para limitar nombres a 10 caracteres
+        function limitarNombre(nombre) {
+            if (nombre.length > 10) {
+                return nombre.substring(0, 10);
+            }
+            return nombre;
+        }
+
+        // Función para contar comentarios por userId
+        async function contarComentariosPorUserId(userId) {
+            const comentariosRef = ref(database, 'comentarios');
+            const comentariosQuery = query(comentariosRef, orderByChild('userId'), equalTo(userId));
+            return new Promise((resolve) => {
+                onValue(comentariosQuery, (snapshot) => {
+                    resolve(snapshot.numChildren());
+                }, { onlyOnce: true });
+            });
         }
 
         // Cargar comentarios
@@ -552,11 +571,23 @@
             });
         }
 
-        // Agregar comentario
-        function agregarComentario() {
-            const nombre = document.getElementById('nombreInput').value || 'Anónimo';
-            const texto = document.getElementById('commentInput').value;
+        // Agregar comentario con límite de 5 por userId
+        async function agregarComentario() {
+            const nombreInput = document.getElementById('nombreInput');
+            const commentInput = document.getElementById('commentInput');
+            let nombre = nombreInput.value || 'Anónimo';
+            const texto = commentInput.value;
+
+            // Limitar nombre a 10 caracteres
+            nombre = limitarNombre(nombre);
+
             if (texto.trim()) {
+                const comentarioCount = await contarComentariosPorUserId(currentUserId);
+                if (comentarioCount >= 5) {
+                    alert('Límite de 5 comentarios alcanzado para tu ID.');
+                    return;
+                }
+
                 const nuevoComentario = {
                     nombre: nombre,
                     texto: texto,
@@ -566,8 +597,32 @@
                     userId: currentUserId
                 };
                 push(ref(database, 'comentarios'), nuevoComentario);
-                document.getElementById('nombreInput').value = '';
-                document.getElementById('commentInput').value = '';
+                nombreInput.value = '';
+                commentInput.value = '';
+            }
+        }
+
+        // Agregar respuesta con límite de nombre
+        function agregarRespuesta(id) {
+            const nombreInput = document.getElementById(`reply-nombre-${id}`);
+            const textoInput = document.getElementById(`reply-texto-${id}`);
+            let nombre = nombreInput.value || 'Anónimo';
+            const texto = textoInput.value;
+
+            // Limitar nombre a 10 caracteres
+            nombre = limitarNombre(nombre);
+
+            if (texto.trim()) {
+                const nuevaRespuesta = {
+                    nombre: nombre,
+                    texto: texto,
+                    timestamp: new Date().toISOString(),
+                    userId: currentUserId
+                };
+                push(ref(database, `comentarios/${id}/replies`), nuevaRespuesta);
+                nombreInput.value = '';
+                textoInput.value = '';
+                document.getElementById(`reply-form-${id}`).classList.remove('active');
             }
         }
 
@@ -625,24 +680,6 @@
         function mostrarResponder(id) {
             const replyForm = document.getElementById(`reply-form-${id}`);
             replyForm.classList.toggle('active');
-        }
-
-        // Agregar respuesta
-        function agregarRespuesta(id) {
-            const nombre = document.getElementById(`reply-nombre-${id}`).value || 'Anónimo';
-            const texto = document.getElementById(`reply-texto-${id}`).value;
-            if (texto.trim()) {
-                const nuevaRespuesta = {
-                    nombre: nombre,
-                    texto: texto,
-                    timestamp: new Date().toISOString(),
-                    userId: currentUserId
-                };
-                push(ref(database, `comentarios/${id}/replies`), nuevaRespuesta);
-                document.getElementById(`reply-nombre-${id}`).value = '';
-                document.getElementById(`reply-texto-${id}`).value = '';
-                document.getElementById(`reply-form-${id}`).classList.remove('active');
-            }
         }
 
         // Mostrar menú
