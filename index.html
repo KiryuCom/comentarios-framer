@@ -54,27 +54,9 @@
             display: flex;
             flex-direction: column;
         }
-        header {
-            background-color: #4a90e2;
-            color: white;
-            text-align: center;
-            padding: 1rem 0.5rem;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            max-width: 390px;
-            margin: 0 auto;
-            box-sizing: border-box;
-        }
-        header h1 {
-            margin: 0;
-            font-size: 1.5rem;
-        }
-        header p {
-            margin: 0;
-            font-size: 0.8rem;
-        }
         .container {
             max-width: 390px;
-            margin: 0 auto;
+            margin: 1rem auto 0; /* Margen superior para evitar que quede pegado al borde */
             padding: 0 0.5rem;
             flex: 1;
             box-sizing: border-box;
@@ -314,22 +296,13 @@
             padding: 0.5rem;
             background-color: #4a90e2;
             color: white;
-            max-width: 390px; /* Alineado con header */
-            margin: 0 auto; /* Centrado */
+            max-width: 390px;
+            margin: 0 auto;
             box-sizing: border-box;
             width: 100%;
             font-size: 0.7rem;
         }
         @media (min-width: 391px) {
-            header {
-                padding: 2rem 1rem;
-            }
-            header h1 {
-                font-size: 2.5rem;
-            }
-            header p {
-                font-size: 0.9rem;
-            }
             .container {
                 max-width: 800px;
                 margin: 2rem auto;
@@ -416,11 +389,6 @@
     </style>
 </head>
 <body>
-    <header>
-        <h1>Comentarios IreSoph</h1>
-        <p>Un lugar para comentarnos a los creadores de IreSoph</p>
-    </header>
-
     <div class="container">
         <div class="form-group">
             <input type="text" id="nombreInput" placeholder="Tu nombre (opcional)">
