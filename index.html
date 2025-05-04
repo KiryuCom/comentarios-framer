@@ -1,104 +1,384 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
 
-<!DOCTYPE html>
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Cuadro de Comentarios</title>
-  <style>
-    .container {
-      width: 390px;
-      height: 1080px;
-      background-color: #f0f0f0;
-      border: 1px solid #000;
-      padding: 20px;
-      box-sizing: border-box;
-      font-family: Arial, sans-serif;
-      overflow-y: auto;
-    }
-    .name-input, .comment-input {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 10px;
-      box-sizing: border-box;
-    }
-    .comment-input {
-      height: 60px;
-      resize: none;
-    }
-    .submit-btn {
-      padding: 10px 20px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-    .submit-btn:hover {
-      background-color: #0056b3;
-    }
-    .comments-section {
-      margin-top: 20px;
-    }
-    .comment {
-      border-top: 1px solid #ccc;
-      padding: 10px 0;
-    }
-    .comment .author {
-      font-weight: bold;
-    }
-    .comment .text {
-      margin-top: 5px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comentarios IreSoph</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        header {
+            background-color: #4a90e2;
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+        }
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        .comments-section {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .comment {
+            display: flex;
+            align-items: flex-start;
+            padding: 1rem 0;
+            border-bottom: 1px solid #eee;
+        }
+        .comment:last-child {
+            border-bottom: none;
+        }
+        .comment .profile-pic {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 1rem;
+            align-self: flex-start;
+            background-color: #ccc; /* Color base por defecto */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+        .comment .comment-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 40px;
+        }
+        .comment .comment-content .nombre {
+            font-weight: bold;
+            margin: 0 0 0.3rem 0;
+            color: #333;
+        }
+        .comment .comment-content .texto {
+            margin: 0;
+            color: #555;
+        }
+        .comment-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+            align-items: center;
+        }
+        .comment-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.2rem 0.5rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .comment-actions button:hover {
+            color: #333;
+        }
+        .replies {
+            margin-left: 3rem;
+            margin-top: 0.5rem;
+        }
+        .reply {
+            display: flex;
+            align-items: flex-start;
+            padding: 0.5rem 0;
+            border-top: 1px solid #f0f0f0;
+        }
+        .reply .profile-pic {
+            width: 30px;
+            height: 30px;
+        }
+        .reply .comment-content {
+            min-height: 30px;
+        }
+        .reply-form {
+            margin-left: 3rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+        .reply-form.active {
+            display: flex;
+        }
+        .form-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        input, button {
+            padding: 0.75rem;
+            font-size: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #357abd;
+        }
+        footer {
+            text-align: center;
+            padding: 1rem;
+            background-color: #4a90e2;
+            color: white;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Deja tu comentario</h2>
-    <form id="comment-form">
-      <input type="text" class="name-input" placeholder="Tu nombre (opcional)">
-      <textarea class="comment-input" placeholder="Escribe tu comentario aquí..."></textarea>
-      <button type="submit" class="submit-btn">Enviar</button>
-    </form>
-    <div class="comments-section" id="comments-list"></div>
-  </div>
+    <header>
+        <h1>Comentarios IreSoph</h1>
+        <p>Un lugar para comentarnos a los creadores de IreSoph</p>
+    </header>
 
-  <script>
-    const form = document.getElementById('comment-form');
-    const nameInput = document.querySelector('.name-input');
-    const commentInput = document.querySelector('.comment-input');
-    const commentsList = document.getElementById('comments-list');
+    <div class="container">
+        <div class="comments-section">
+            <h2>Comentarios</h2>
+            <div id="comments-list"></div>
+        </div>
+        <div class="form-group">
+            <input type="text" id="nombreInput" placeholder="Tu nombre (opcional)">
+            <input type="text" id="commentInput" placeholder="Escribe tu comentario...">
+            <button onclick="agregarComentario()">Enviar</button>
+        </div>
+    </div>
 
-    function loadComments() {
-      const comments = JSON.parse(localStorage.getItem('comments')) || [];
-      commentsList.innerHTML = '';
-      comments.forEach(comment => {
-        const div = document.createElement('div');
-        div.classList.add('comment');
-        div.innerHTML = `
-          <div class="author">${comment.name}</div>
-          <div class="text">${comment.text}</div>
-        `;
-        commentsList.appendChild(div);
-      });
-    }
+    <footer>
+        <p>© 2025 Comentarios IreSoph. Todos los derechos reservados.</p>
+    </footer>
 
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      const name = nameInput.value.trim() || 'Usuario anónimo';
-      const text = commentInput.value.trim();
-      if (!text) return;
+    <!-- Incluir Firebase SDK (versión modular) -->
+    <script type="module">
+        // Importar los módulos necesarios de Firebase
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+        import { getDatabase, ref, onValue, push, update } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js';
 
-      const newComment = { name, text };
-      const comments = JSON.parse(localStorage.getItem('comments')) || [];
-      comments.push(newComment);
-      localStorage.setItem('comments', JSON.stringify(comments));
+        // Configuración de Firebase (credenciales de tu proyecto IreSoph)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBAg0MTpWqrdE--W7G9tm0cFE4YZyFtyk",
+            authDomain: "iresoph-9bf6e.firebaseapp.com",
+            databaseURL: "https://iresoph-9bf6e-default-rtdb.firebaseio.com",
+            projectId: "iresoph-9bf6e",
+            storageBucket: "iresoph-9bf6e.appspot.com",
+            messagingSenderId: "9418117274235",
+            appId: "1:9418117274235:web:b0d7816c9a8bc245686856",
+            measurementId: "G-1FNW6MLW"
+        };
 
-      nameInput.value = '';
-      commentInput.value = '';
-      loadComments();
-    });
+        // Inicializar Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
 
-    loadComments();
-  </script>
+        // Generar color aleatorio basado en un string (nombre o timestamp)
+        function generarColorAleatorio(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const r = (hash & 0xff0000) >> 16;
+            const g = (hash & 0x00ff00) >> 8;
+            const b = hash & 0x0000ff;
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+
+        // Cargar comentarios desde Firebase
+        function cargarComentarios() {
+            const commentsList = document.getElementById('comments-list');
+            const comentariosRef = ref(database, 'comentarios');
+            onValue(comentariosRef, (snapshot) => {
+                commentsList.innerHTML = ''; // Limpiar la lista
+                const comentarios = snapshot.val();
+                if (comentarios) {
+                    Object.entries(comentarios).forEach(([id, comentario]) => {
+                        const color = generarColorAleatorio(comentario.nombre || comentario.timestamp);
+                        const div = document.createElement('div');
+                        div.className = 'comment';
+                        div.innerHTML = `
+                            <div class="profile-pic" style="background-color: ${color};">${(comentario.nombre || 'Anónimo')[0]}</div>
+                            <div class="comment-content">
+                                <p class="nombre">${comentario.nombre || 'Anónimo'}</p>
+                                <p class="texto">${comentario.texto}</p>
+                                <div class="comment-actions">
+                                    <button onclick="darLike('${id}')">
+                                        👍 ${comentario.likes || 0}
+                                    </button>
+                                    <button onclick="darDislike('${id}')">
+                                        👎 ${comentario.dislikes || 0}
+                                    </button>
+                                    <button onclick="mostrarResponder('${id}')">Responder</button>
+                                </div>
+                                <div class="replies" id="replies-${id}"></div>
+                                <div class="reply-form" id="reply-form-${id}">
+                                    <input type="text" id="reply-nombre-${id}" placeholder="Tu nombre (opcional)">
+                                    <input type="text" id="reply-texto-${id}" placeholder="Escribe tu respuesta...">
+                                    <button onclick="agregarRespuesta('${id}')">Enviar</button>
+                                </div>
+                            </div>
+                        `;
+                        commentsList.appendChild(div);
+
+                        // Cargar respuestas si existen
+                        if (comentario.replies) {
+                            const repliesDiv = document.getElementById(`replies-${id}`);
+                            Object.values(comentario.replies).forEach(reply => {
+                                const replyColor = generarColorAleatorio(reply.nombre || reply.timestamp);
+                                const replyDiv = document.createElement('div');
+                                replyDiv.className = 'reply';
+                                replyDiv.innerHTML = `
+                                    <div class="profile-pic" style="background-color: ${replyColor};">${(reply.nombre || 'Anónimo')[0]}</div>
+                                    <div class="comment-content">
+                                        <p class="nombre">${reply.nombre || 'Anónimo'}</p>
+                                        <p class="texto">${reply.texto}</p>
+                                    </div>
+                                `;
+                                repliesDiv.appendChild(replyDiv);
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        // Agregar un nuevo comentario a Firebase
+        function agregarComentario() {
+            const nombre = document.getElementById('nombreInput').value || 'Anónimo';
+            const texto = document.getElementById('commentInput').value;
+            if (texto.trim()) {
+                const nuevoComentario = {
+                    nombre: nombre,
+                    texto: texto,
+                    timestamp: new Date().toISOString(),
+                    likes: 0,
+                    dislikes: 0
+                };
+                // Guardar en Firebase
+                push(ref(database, 'comentarios'), nuevoComentario);
+                // Limpiar el formulario
+                document.getElementById('nombreInput').value = '';
+                document.getElementById('commentInput').value = '';
+            }
+        }
+
+        // Dar like a un comentario
+        function darLike(id) {
+            const comentarioRef = ref(database, `comentarios/${id}`);
+            onValue(comentarioRef, (snapshot) => {
+                const comentario = snapshot.val();
+                update(comentarioRef, {
+                    likes: (comentario.likes || 0) + 1
+                });
+            }, { onlyOnce: true });
+        }
+
+        // Dar dislike a un comentario
+        function darDislike(id) {
+            const comentarioRef = ref(database, `comentarios/${id}`);
+            onValue(comentarioRef, (snapshot) => {
+                const comentario = snapshot.val();
+                update(comentarioRef, {
+                    dislikes: (comentario.dislikes || 0) + 1
+                });
+            }, { onlyOnce: true });
+        }
+
+        // Mostrar el formulario de respuesta
+        function mostrarResponder(id) {
+            const replyForm = document.getElementById(`reply-form-${id}`);
+            replyForm.classList.toggle('active');
+        }
+
+        // Agregar una respuesta a un comentario
+        function agregarRespuesta(id) {
+            const nombre = document.getElementById(`reply-nombre-${id}`).value || 'Anónimo';
+            const texto = document.getElementById(`reply-texto-${id}`).value;
+            if (texto.trim()) {
+                const nuevaRespuesta = {
+                    nombre: nombre,
+                    texto: texto,
+                    timestamp: new Date().toISOString()
+                };
+                // Guardar la respuesta en Firebase
+                push(ref(database, `comentarios/${id}/replies`), nuevaRespuesta);
+                // Limpiar el formulario de respuesta
+                document.getElementById(`reply-nombre-${id}`).value = '';
+                document.getElementById(`reply-texto-${id}`).value = '';
+                document.getElementById(`reply-form-${id}`).classList.remove('active');
+            }
+        }
+
+        // Cargar comentarios al iniciar la página
+        window.onload = cargarComentarios;
+
+        // Hacer las funciones accesibles globalmente
+        window.agregarComentario = agregarComentario;
+        window.darLike = darLike;
+        window.darDislike = darDislike;
+        window.mostrarResponder = mostrarResponder;
+        window.agregarRespuesta = agregarRespuesta;
+    </script>
 </body>
 </html>
