@@ -1,0 +1,753 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comentarios IreSoph</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .container {
+            max-width: 390px;
+            margin: 1rem auto 0;
+            padding: 0 0.5rem;
+            flex: 1;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            width: 100%;
+            max-width: 100%;
+            margin: 0;
+            box-sizing: border-box;
+        }
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        input {
+            padding: 0.5rem;
+            font-size: 0.9rem;
+            border: 1px solid #444;
+            border-radius: 5px;
+            background-color: #333;
+            color: #e0e0e0;
+            box-sizing: border-box;
+            margin: 0;
+        }
+        #nombreInput {
+            width: 100%;
+        }
+        #commentInput {
+            flex: 1;
+            min-width: 0;
+        }
+        button {
+            padding: 0.5rem;
+            font-size: 0.9rem;
+            border: none;
+            border-radius: 5px;
+            background-color: #4a90e2;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            box-sizing: border-box;
+            width: 80px;
+        }
+        button:hover {
+            background-color: #357abd;
+        }
+        .comments-section {
+            background-color: #2c2c2c;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+            padding: 1rem 0.5rem;
+            flex: 1;
+            overflow-y: auto;
+            max-width: 390px;
+            margin: 0 auto 0.5rem;
+            box-sizing: border-box;
+        }
+        .comment {
+            display: flex;
+            align-items: flex-start;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #444;
+            position: relative;
+        }
+        .comment:last-child {
+            border-bottom: none;
+        }
+        .comment .profile-pic {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+            align-self: flex-start;
+            background-color: #555;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #e0e0e0;
+            font-size: 1.2rem;
+        }
+        .comment .comment-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 30px;
+        }
+        .comment .comment-content .nombre {
+            font-weight: bold;
+            margin: 0 0 0.2rem 0;
+            color: #e0e0e0;
+            font-size: 0.9rem;
+        }
+        .comment .comment-content .texto {
+            margin: 0;
+            color: #b0b0b0;
+            font-size: 0.85rem;
+        }
+        .comment-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.3rem;
+            align-items: center;
+        }
+        .comment-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.2rem;
+            padding: 0.1rem 0.3rem;
+            font-size: 0.8rem;
+            color: #b0b0b0;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        .comment-actions button:hover {
+            color: #e0e0e0;
+        }
+        .comment-actions .vote-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .reply-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.3rem;
+            width: 100%;
+        }
+        .menu-options {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+        }
+        .menu-options button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #b0b0b0;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        .menu-options .dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: #333;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+            border-radius: 5px;
+            z-index: 1;
+            font-size: 0.8rem;
+        }
+        .menu-options .dropdown.active {
+            display: block;
+        }
+        .menu-options .dropdown button {
+            display: block;
+            width: 100%;
+            padding: 0.3rem 0.8rem;
+            text-align: left;
+            border: none;
+            background: none;
+            cursor: pointer;
+            color: #e0e0e0;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        .menu-options .dropdown button:hover {
+            background-color: #444;
+        }
+        .edit-form {
+            display: none;
+            margin-top: 0.3rem;
+        }
+        .edit-form.active {
+            display: flex;
+            gap: 0.3rem;
+        }
+        .replies {
+            margin-left: 2.5rem;
+            margin-top: 0.3rem;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 0.85rem;
+            display: none;
+            background-color: #2c2c2c;
+        }
+        .replies.active {
+            display: block;
+        }
+        .reply {
+            display: flex;
+            align-items: flex-start;
+            padding: 0.3rem 0;
+            border-top: 1px solid #444;
+            position: relative;
+        }
+        .reply .profile-pic {
+            width: 25px;
+            height: 25px;
+        }
+        .reply .comment-content {
+            min-height: 25px;
+        }
+        .reply-form {
+            margin-left: 2.5rem;
+            margin-top: 0.3rem;
+            display: none;
+        }
+        .reply-form.active {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+        .view-replies {
+            color: #4a90e2;
+            cursor: pointer;
+            font-size: 0.8rem;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            display: none;
+        }
+        .view-replies.active {
+            display: block;
+        }
+        footer {
+            text-align: center;
+            padding: 0.5rem;
+            background-color: #4a90e2;
+            color: white;
+            max-width: 390px;
+            margin: 0 auto;
+            box-sizing: border-box;
+            width: 100%;
+            font-size: 0.7rem;
+        }
+        @media (min-width: 391px) {
+            .container {
+                max-width: 800px;
+                margin: 2rem auto;
+                padding: 0 1rem;
+            }
+            .form-group {
+                gap: 1rem;
+            }
+            .input-group {
+                gap: 1rem;
+            }
+            input {
+                padding: 0.75rem;
+                font-size: 1rem;
+            }
+            button {
+                padding: 0.75rem;
+                font-size: 1rem;
+                width: 100px;
+            }
+            .comments-section {
+                padding: 1.5rem 1rem;
+            }
+            .comment {
+                padding: 1rem 0;
+            }
+            .comment .profile-pic {
+                width: 40px;
+                height: 40px;
+                font-size: 1.5rem;
+            }
+            .comment .comment-content {
+                min-height: 40px;
+            }
+            .comment .comment-content .nombre {
+                font-size: 0.9rem;
+            }
+            .comment .comment-content .texto {
+                font-size: 0.85rem;
+            }
+            .comment-actions button {
+                font-size: 0.9rem;
+                padding: 0.2rem 0.5rem;
+            }
+            .menu-options button {
+                font-size: 1rem;
+            }
+            .menu-options .dropdown {
+                font-size: 0.9rem;
+            }
+            .menu-options .dropdown button {
+                padding: 0.5rem 1rem;
+            }
+            .edit-form {
+                margin-top: 0.5rem;
+            }
+            .replies {
+                margin-left: 3rem;
+                margin-top: 0.5rem;
+                max-height: 200px;
+            }
+            .reply {
+                padding: 0.5rem 0;
+            }
+            .reply .profile-pic {
+                width: 30px;
+                height: 30px;
+            }
+            .reply .comment-content {
+                min-height: 30px;
+            }
+            .reply-form {
+                margin-left: 3rem;
+                margin-top: 0.5rem;
+            }
+            .view-replies {
+                font-size: 0.9rem;
+            }
+            footer {
+                padding: 1rem;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="form-group">
+            <input type="text" id="nombreInput" placeholder="Tu nombre (opcional)">
+            <div class="input-group">
+                <input type="text" id="commentInput" placeholder="Escribe tu comentario...">
+                <button onclick="agregarComentario()">Enviar</button>
+            </div>
+        </div>
+        <div class="comments-section">
+            <h2>Comentarios</h2>
+            <div id="comments-list"></div>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2025 Comentarios IreSoph. Todos los derechos reservados.</p>
+    </footer>
+
+    <!-- Incluir Firebase SDK (versión modular) -->
+    <script type="module">
+        // Importar los módulos necesarios de Firebase
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+        import { getDatabase, ref, onValue, push, update, remove } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js';
+
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBAg0MTpWqrdE--W7G9tm0cFE4YZyFtyk",
+            authDomain: "iresoph-9bf6e.firebaseapp.com",
+            databaseURL: "https://iresoph-9bf6e-default-rtdb.firebaseio.com",
+            projectId: "iresoph-9bf6e",
+            storageBucket: "iresoph-9bf6e.appspot.com",
+            messagingSenderId: "9418117274235",
+            appId: "1:9418117274235:web:b0d7816c9a8bc245686856",
+            measurementId: "G-1FNW6MLW"
+        };
+
+        // Inicializar Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // Generar o recuperar el userId del usuario actual
+        let currentUserId = localStorage.getItem('currentUserId');
+        if (!currentUserId) {
+            currentUserId = 'user_' + Date.now();
+            localStorage.setItem('currentUserId', currentUserId);
+        }
+
+        // Generar color aleatorio
+        function generarColorAleatorio(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const r = (hash & 0xff0000) >> 16;
+            const g = (hash & 0x00ff00) >> 8;
+            const b = hash & 0x0000ff;
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+
+        // Cargar comentarios
+        function cargarComentarios() {
+            const commentsList = document.getElementById('comments-list');
+            const comentariosRef = ref(database, 'comentarios');
+            onValue(comentariosRef, (snapshot) => {
+                commentsList.innerHTML = '';
+                const comentarios = snapshot.val();
+                if (comentarios) {
+                    Object.entries(comentarios).forEach(([id, comentario]) => {
+                        const color = generarColorAleatorio(comentario.nombre || comentario.timestamp);
+                        const userId = comentario.userId || 'anonymous_' + id;
+                        const isAuthor = userId === currentUserId;
+                        const div = document.createElement('div');
+                        div.className = 'comment';
+                        div.setAttribute('data-id', id);
+                        div.setAttribute('data-user-id', userId);
+                        div.innerHTML = `
+                            <div class="profile-pic" style="background-color: ${color};">${(comentario.nombre || 'Anónimo')[0]}</div>
+                            <div class="comment-content">
+                                <p class="nombre">${comentario.nombre || 'Anónimo'}</p>
+                                <p class="texto">${comentario.texto}</p>
+                                <div class="comment-actions">
+                                    <div class="vote-buttons">
+                                        <button onclick="giveLike('${id}', '${userId}')">
+                                            👍 ${comentario.likes || 0}
+                                        </button>
+                                        <button onclick="giveDislike('${id}', '${userId}')">
+                                            👎 ${comentario.dislikes || 0}
+                                        </button>
+                                    </div>
+                                    <button onclick="mostrarResponder('${id}')">Responder</button>
+                                </div>
+                                <div class="reply-actions">
+                                    <div class="view-replies" id="view-replies-${id}"></div>
+                                </div>
+                                <div class="replies" id="replies-${id}"></div>
+                                <div class="reply-form" id="reply-form-${id}">
+                                    <input type="text" id="reply-nombre-${id}" placeholder="Tu nombre (opcional)">
+                                    <input type="text" id="reply-texto-${id}" placeholder="Escribe tu respuesta...">
+                                    <button onclick="agregarRespuesta('${id}')">Enviar</button>
+                                </div>
+                                <div class="edit-form" id="edit-form-${id}">
+                                    <input type="text" id="edit-texto-${id}" value="${comentario.texto}">
+                                    <button onclick="guardarEdicion('${id}')">Guardar</button>
+                                    <button onclick="cancelarEdicion('${id}')">Cancelar</button>
+                                </div>
+                            </div>
+                            <div class="menu-options">
+                                <button onclick="mostrarMenu('${id}')">⋮</button>
+                                <div class="dropdown" id="dropdown-${id}">
+                                    ${isAuthor ? `<button onclick="eliminarComentario('${id}', '${userId}')">Eliminar</button>` : ''}
+                                    <button onclick="compartirComentario('${id}')">Compartir</button>
+                                    ${isAuthor ? `<button onclick="editarComentario('${id}', '${userId}')">Editar</button>` : ''}
+                                </div>
+                            </div>
+                        `;
+                        commentsList.appendChild(div);
+
+                        if (comentario.replies) {
+                            const repliesDiv = document.getElementById(`replies-${id}`);
+                            const viewReplies = document.getElementById(`view-replies-${id}`);
+                            const replyCount = Object.keys(comentario.replies).length;
+                            if (replyCount > 0) {
+                                viewReplies.className = 'view-replies active';
+                                viewReplies.textContent = `Ver ${replyCount} respuestas`;
+                                viewReplies.onclick = () => {
+                                    const isVisible = repliesDiv.classList.toggle('active');
+                                    viewReplies.textContent = isVisible ? 'Ocultar respuestas' : `Ver ${replyCount} respuestas`;
+                                };
+                            }
+                            Object.entries(comentario.replies).forEach(([replyId, reply]) => {
+                                const replyColor = generarColorAleatorio(reply.nombre || reply.timestamp);
+                                const replyUserId = reply.userId || 'anonymous_' + replyId;
+                                const isReplyAuthor = replyUserId === currentUserId;
+                                const replyDiv = document.createElement('div');
+                                replyDiv.className = 'reply';
+                                replyDiv.setAttribute('data-id', replyId);
+                                replyDiv.setAttribute('data-user-id', replyUserId);
+                                replyDiv.innerHTML = `
+                                    <div class="profile-pic" style="background-color: ${replyColor};">${(reply.nombre || 'Anónimo')[0]}</div>
+                                    <div class="comment-content">
+                                        <p class="nombre">${reply.nombre || 'Anónimo'}</p>
+                                        <p class="texto">${reply.texto}</p>
+                                    </div>
+                                    <div class="menu-options">
+                                        <button onclick="mostrarMenuReply('${id}', '${replyId}')">⋮</button>
+                                        <div class="dropdown" id="dropdown-${id}-${replyId}">
+                                            ${isReplyAuthor ? `<button onclick="eliminarRespuesta('${id}', '${replyId}', '${replyUserId}')">Eliminar</button>` : ''}
+                                            <button onclick="compartirRespuesta('${id}', '${replyId}')">Compartir</button>
+                                            ${isReplyAuthor ? `<button onclick="editarRespuesta('${id}', '${replyId}', '${replyUserId}')">Editar</button>` : ''}
+                                        </div>
+                                    </div>
+                                `;
+                                repliesDiv.appendChild(replyDiv);
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        // Agregar comentario
+        function agregarComentario() {
+            const nombre = document.getElementById('nombreInput').value || 'Anónimo';
+            const texto = document.getElementById('commentInput').value;
+            if (texto.trim()) {
+                const nuevoComentario = {
+                    nombre: nombre,
+                    texto: texto,
+                    timestamp: new Date().toISOString(),
+                    likes: 0,
+                    dislikes: 0,
+                    userId: currentUserId
+                };
+                push(ref(database, 'comentarios'), nuevoComentario);
+                document.getElementById('nombreInput').value = '';
+                document.getElementById('commentInput').value = '';
+            }
+        }
+
+        // Dar like
+        function giveLike(id, userId) {
+            const voteKey = `vote_${id}_${userId}`;
+            const currentVote = localStorage.getItem(voteKey);
+            const comentarioRef = ref(database, `comentarios/${id}`);
+
+            onValue(comentarioRef, (snapshot) => {
+                const comentario = snapshot.val();
+                let updates = {};
+
+                if (currentVote === 'like') {
+                    updates.likes = (comentario.likes || 0) - 1;
+                    localStorage.removeItem(voteKey);
+                } else {
+                    updates.likes = (comentario.likes || 0) + 1;
+                    if (currentVote === 'dislike') {
+                        updates.dislikes = (comentario.dislikes || 0) - 1;
+                    }
+                    localStorage.setItem(voteKey, 'like');
+                }
+
+                update(comentarioRef, updates);
+            }, { onlyOnce: true });
+        }
+
+        // Dar dislike
+        function giveDislike(id, userId) {
+            const voteKey = `vote_${id}_${userId}`;
+            const currentVote = localStorage.getItem(voteKey);
+            const comentarioRef = ref(database, `comentarios/${id}`);
+
+            onValue(comentarioRef, (snapshot) => {
+                const comentario = snapshot.val();
+                let updates = {};
+
+                if (currentVote === 'dislike') {
+                    updates.dislikes = (comentario.dislikes || 0) - 1;
+                    localStorage.removeItem(voteKey);
+                } else {
+                    updates.dislikes = (comentario.dislikes || 0) + 1;
+                    if (currentVote === 'like') {
+                        updates.likes = (comentario.likes || 0) - 1;
+                    }
+                    localStorage.setItem(voteKey, 'dislike');
+                }
+
+                update(comentarioRef, updates);
+            }, { onlyOnce: true });
+        }
+
+        // Mostrar formulario de respuesta
+        function mostrarResponder(id) {
+            const replyForm = document.getElementById(`reply-form-${id}`);
+            replyForm.classList.toggle('active');
+        }
+
+        // Agregar respuesta
+        function agregarRespuesta(id) {
+            const nombre = document.getElementById(`reply-nombre-${id}`).value || 'Anónimo';
+            const texto = document.getElementById(`reply-texto-${id}`).value;
+            if (texto.trim()) {
+                const nuevaRespuesta = {
+                    nombre: nombre,
+                    texto: texto,
+                    timestamp: new Date().toISOString(),
+                    userId: currentUserId
+                };
+                push(ref(database, `comentarios/${id}/replies`), nuevaRespuesta);
+                document.getElementById(`reply-nombre-${id}`).value = '';
+                document.getElementById(`reply-texto-${id}`).value = '';
+                document.getElementById(`reply-form-${id}`).classList.remove('active');
+            }
+        }
+
+        // Mostrar menú
+        function mostrarMenu(id) {
+            const dropdown = document.getElementById(`dropdown-${id}`);
+            dropdown.classList.toggle('active');
+        }
+
+        // Mostrar menú de respuesta
+        function mostrarMenuReply(commentId, replyId) {
+            const dropdown = document.getElementById(`dropdown-${commentId}-${replyId}`);
+            dropdown.classList.toggle('active');
+        }
+
+        // Eliminar comentario
+        function eliminarComentario(id, userId) {
+            if (userId !== currentUserId) {
+                alert('No tienes permiso para eliminar este comentario.');
+                return;
+            }
+            const comentarioRef = ref(database, `comentarios/${id}`);
+            remove(comentarioRef);
+        }
+
+        // Eliminar respuesta
+        function eliminarRespuesta(commentId, replyId, userId) {
+            if (userId !== currentUserId) {
+                alert('No tienes permiso para eliminar esta respuesta.');
+                return;
+            }
+            const replyRef = ref(database, `comentarios/${commentId}/replies/${replyId}`);
+            remove(replyRef);
+        }
+
+        // Compartir comentario
+        function compartirComentario(id) {
+            const url = `${window.location.href}#comment-${id}`;
+            navigator.clipboard.writeText(url).then(() => {
+                alert('Enlace al comentario copiado al portapapeles: ' + url);
+            });
+        }
+
+        // Compartir respuesta
+        function compartirRespuesta(commentId, replyId) {
+            const url = `${window.location.href}#comment-${commentId}-reply-${replyId}`;
+            navigator.clipboard.writeText(url).then(() => {
+                alert('Enlace a la respuesta copiado al portapapeles: ' + url);
+            });
+        }
+
+        // Editar comentario
+        function editarComentario(id, userId) {
+            if (userId !== currentUserId) {
+                alert('No tienes permiso para editar este comentario.');
+                return;
+            }
+            const editForm = document.getElementById(`edit-form-${id}`);
+            editForm.classList.add('active');
+            const dropdown = document.getElementById(`dropdown-${id}`);
+            dropdown.classList.remove('active');
+        }
+
+        // Editar respuesta
+        function editarRespuesta(commentId, replyId, userId) {
+            if (userId !== currentUserId) {
+                alert('No tienes permiso para editar esta respuesta.');
+                return;
+            }
+            alert('Edición de respuestas no implementada aún.');
+        }
+
+        // Guardar edición
+        function guardarEdicion(id) {
+            const texto = document.getElementById(`edit-texto-${id}`).value;
+            if (texto.trim()) {
+                const comentarioRef = ref(database, `comentarios/${id}`);
+                update(comentarioRef, { texto: texto });
+                document.getElementById(`edit-form-${id}`).classList.remove('active');
+            }
+        }
+
+        // Cancelar edición
+        function cancelarEdicion(id) {
+            document.getElementById(`edit-form-${id}`).classList.remove('active');
+        }
+
+        // Cargar comentarios al iniciar
+        window.onload = cargarComentarios;
+
+        // Hacer funciones accesibles globalmente
+        window.agregarComentario = agregarComentario;
+        window.giveLike = giveLike;
+        window.giveDislike = giveDislike;
+        window.mostrarResponder = mostrarResponder;
+        window.agregarRespuesta = agregarRespuesta;
+        window.mostrarMenu = mostrarMenu;
+        window.mostrarMenuReply = mostrarMenuReply;
+        window.eliminarComentario = eliminarComentario;
+        window.eliminarRespuesta = eliminarRespuesta;
+        window.compartirComentario = compartirComentario;
+        window.compartirRespuesta = compartirRespuesta;
+        window.editarComentario = editarComentario;
+        window.editarRespuesta = editarRespuesta;
+        window.guardarEdicion = guardarEdicion;
+        window.cancelarEdicion = cancelarEdicion;
+    </script>
+</body>
+</html>
